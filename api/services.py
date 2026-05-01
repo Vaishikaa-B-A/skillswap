@@ -15,7 +15,7 @@
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
-from . import models
+from api import models
 
 
 # =============================================================

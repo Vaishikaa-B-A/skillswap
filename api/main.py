@@ -26,14 +26,14 @@ from typing import List, Optional
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from . import models, schemas, services
-from .database import engine, get_db
+from api import models, schemas, services
+from api.database import engine, get_db
 
 from fastapi.middleware.cors import CORSMiddleware
 
-from .auth import hash_password, verify_password, create_access_token, decode_token
+from api.auth import hash_password, verify_password, create_access_token, decode_token
 from fastapi import Header
-from .schemas import RegisterRequest, LoginRequest, TokenResponse
+from api.schemas import RegisterRequest, LoginRequest, TokenResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 

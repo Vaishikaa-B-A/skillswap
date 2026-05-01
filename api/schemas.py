@@ -16,7 +16,7 @@ from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-from .models import SwapState, BountyState, WorkshopState
+from api.models import SwapState, BountyState, WorkshopState
 
 
 # ── Skill Type ────────────────────────────────────────────────

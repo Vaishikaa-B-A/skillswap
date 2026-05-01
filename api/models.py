@@ -14,7 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func   # func.now() → server-side timestamp
 
-from .database import Base         # the shared declarative base
+from api.database import Base         # the shared declarative base
 
 
 # =============================================================
