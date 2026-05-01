@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SkillSwap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN: Warm editorial dark — ink + parchment
+═══════════════════════════════════════════════ */
+:root{
+  --bg:#0D0C0A; --s1:#141210; --s2:#1B1916; --s3:#232018;
+  --b1:rgba(255,210,120,0.10); --b2:rgba(255,210,120,0.05);
+  --gold:#E8B84B; --gold2:#F5D07A; --gold3:#FFF0C0;
+  --txt1:#F0EAD8; --txt2:#A89870; --txt3:#6B5E46;
+  --green:#5DB87A; --red:#E06060; --blue:#6BA3D6;
+  --r:10px; --rL:18px; --rXL:26px;
+  --sh:0 4px 32px rgba(0,0,0,.55);
+  --sh-gold:0 0 40px rgba(232,184,75,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt1);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(232,184,75,.06) 0%,transparent 70%)}
+
+/* ─── AUTH SCREENS ─────────────────────────────── */
+#authWrap{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 0%,rgba(232,184,75,.08),transparent 70%),var(--bg)}
+#authWrap.hidden{display:none}
+
+.auth-card{width:100%;max-width:430px;background:var(--s1);border:1px solid var(--b1);
+  border-radius:var(--rXL);padding:40px 36px;box-shadow:var(--sh-gold);position:relative;z-index:1}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo .mark{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--gold);letter-spacing:.02em}
+.auth-logo .sub{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--txt3);margin-top:3px}
+.auth-tabs{display:flex;background:var(--s2);border-radius:var(--r);padding:4px;margin-bottom:28px}
+.auth-tab{flex:1;text-align:center;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;
+  font-weight:500;color:var(--txt2);transition:all .2s}
+.auth-tab.on{background:var(--s3);color:var(--gold);box-shadow:0 1px 6px rgba(0,0,0,.3)}
+
+.fgrp{margin-bottom:16px}
+.flbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px}
+.finp{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
+  color:var(--txt1);font-family:'Outfit',sans-serif;font-size:14px;padding:10px 14px;outline:none;transition:.15s}
+.finp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,75,.1)}
+.finp::placeholder{color:var(--txt3)}
+.finp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.btn-main{width:100%;padding:12px;background:var(--gold);color:#1a1200;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;
+  letter-spacing:.02em;transition:all .2s;margin-top:4px}
+.btn-main:hover{background:var(--gold2);box-shadow:0 0 24px rgba(232,184,75,.3);transform:translateY(-1px)}
+.btn-main:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.auth-err{background:rgba(224,96,96,.12);border:1px solid rgba(224,96,96,.3);border-radius:var(--r);
+  padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+.auth-ok{background:rgba(93,184,122,.12);border:1px solid rgba(93,184,122,.3);border-radius:var(--r);
+  padding:10px 14px;font-size:13px;color:var(--green);margin-bottom:14px;display:none}
+
+.bonus-badge{display:flex;align-items:center;gap:10px;background:rgba(232,184,75,.08);
+  border:1px solid rgba(232,184,75,.2);border-radius:var(--r);padding:10px 14px;margin-bottom:20px}
+.bonus-badge .icon{font-size:1.4rem}
+.bonus-badge p{font-size:12.5px;color:var(--txt2);line-height:1.4}
+.bonus-badge strong{color:var(--gold)}
+
+/* ─── APP SHELL ─────────────────────────────────── */
+#appWrap{display:none;min-height:100vh;position:relative;z-index:1}
+#appWrap.on{display:flex}
+
+/* SIDEBAR */
+.sidebar{width:224px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--b2);
+  position:fixed;top:0;left:0;bottom:0;z-index:100;display:flex;flex-direction:column}
+.sb-brand{padding:24px 20px 18px;border-bottom:1px solid var(--b2)}
+.sb-brand .mark{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold)}
+.sb-brand .sub{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);margin-top:2px}
+.sb-sec{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);
+  padding:14px 20px 5px;font-weight:500}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;
+  color:var(--txt2);font-size:13px;border-left:2px solid transparent;transition:.15s;user-select:none}
+.sb-item:hover{color:var(--txt1);background:var(--s2)}
+.sb-item.on{color:var(--gold);border-left-color:var(--gold);background:linear-gradient(90deg,rgba(232,184,75,.1),transparent)}
+.sb-item .ico{width:16px;text-align:center;font-size:13px}
+.sb-foot{margin-top:auto;padding:16px 20px;border-top:1px solid var(--b2)}
+.sb-user{display:flex;align-items:center;gap:10px;cursor:pointer}
+.sb-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;
+  font-size:14px;font-weight:700;color:#1a1200;flex-shrink:0}
+.sb-uname{font-size:13px;font-weight:500}
+.sb-coins{font-size:11px;color:var(--gold);font-family:'JetBrains Mono',monospace}
+.sb-logout{margin-top:10px;width:100%;padding:7px;background:transparent;border:1px solid var(--b1);
+  border-radius:var(--r);color:var(--txt3);font-family:'Outfit',sans-serif;font-size:12px;
+  cursor:pointer;transition:.15s}
+.sb-logout:hover{background:rgba(224,96,96,.1);color:var(--red);border-color:rgba(224,96,96,.3)}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(13,12,10,.9);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--b2);padding:12px 28px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400;color:var(--txt1)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.search-wrap{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--b1);
+  border-radius:22px;padding:6px 14px;transition:.15s}
+.search-wrap:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,75,.08)}
+.search-wrap input{background:none;border:none;outline:none;color:var(--txt1);
+  font-family:'Outfit',sans-serif;font-size:13px;width:170px}
+.search-wrap input::placeholder{color:var(--txt3)}
+
+/* MAIN */
+.main{margin-left:224px;flex:1}
+.page{display:none;padding:28px;animation:fadeUp .25s ease}
+.page.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:var(--r);
+  font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:.15s;white-space:nowrap}
+.btn-gold{background:var(--gold);color:#1a1200}
+.btn-gold:hover{background:var(--gold2);box-shadow:0 0 18px rgba(232,184,75,.25);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--b1)}
+.btn-ghost:hover{color:var(--txt1);background:var(--s2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:6px}
+.btn-red{background:rgba(224,96,96,.12);color:var(--red);border:1px solid rgba(224,96,96,.2)}
+.btn-red:hover{background:rgba(224,96,96,.22)}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rL);padding:20px 22px;transition:.2s}
+.card:hover{border-color:var(--b1);box-shadow:var(--sh)}
+
+/* STAT ROW */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.stat-card{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);
+  padding:18px 18px 14px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+  background:radial-gradient(circle,rgba(232,184,75,.1),transparent 70%)}
+.stat-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:8px}
+.stat-val{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--gold);font-weight:400}
+.stat-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sh h2{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:400}
+
+/* FEED GRID */
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+
+.fcard{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rL);
+  padding:18px 20px;transition:.2s;cursor:default}
+.fcard:hover{border-color:var(--b1);box-shadow:var(--sh);transform:translateY(-2px)}
+.fcard.hot{border-color:rgba(232,184,75,.35);background:linear-gradient(135deg,var(--s1) 60%,rgba(232,184,75,.05))}
+.fcard.hot::before{content:'★ Featured';position:absolute;top:14px;right:14px;font-size:10px;
+  color:var(--gold2);background:rgba(232,184,75,.12);padding:2px 8px;border-radius:20px}
+.fcard{position:relative}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;font-weight:600;padding:3px 9px;border-radius:20px;margin-bottom:10px}
+.b-bounty{background:rgba(107,163,214,.12);color:var(--blue)}
+.b-workshop{background:rgba(93,184,122,.12);color:var(--green)}
+.b-resource{background:rgba(232,184,75,.12);color:var(--gold)}
+.b-skill{background:rgba(160,140,220,.12);color:#A88FD4}
+
+.fcard h3{font-size:14px;font-weight:500;margin-bottom:6px;color:var(--txt1)}
+.fcard p{font-size:12.5px;color:var(--txt2);line-height:1.55;display:-webkit-box;
+  -webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fcard-ft{display:flex;align-items:center;justify-content:space-between;margin-top:13px}
+
+.tag{font-size:11px;background:var(--s2);color:var(--txt3);padding:3px 9px;
+  border-radius:20px;border:1px solid var(--b2)}
+.coin{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);
+  background:rgba(232,184,75,.08);padding:3px 9px;border-radius:6px}
+
+/* MATCH CARDS */
+.mcard{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rL);padding:18px;transition:.2s}
+.mcard:hover{border-color:var(--gold);box-shadow:var(--sh-gold);transform:translateY(-2px)}
+.mcard-hd{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.mav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--s3),var(--s2));
+  display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;
+  font-size:17px;font-weight:600;color:var(--gold);border:1px solid var(--b1);flex-shrink:0}
+.mname{font-size:14px;font-weight:500}
+.mrep{font-size:12px;color:var(--gold);letter-spacing:1px}
+
+.skill-row{margin:7px 0}
+.skill-row-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:4px}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.t-offer{background:rgba(93,184,122,.1);color:var(--green);border:1px solid rgba(93,184,122,.2);font-size:11px;padding:2px 8px;border-radius:4px}
+.t-want{background:rgba(107,163,214,.1);color:var(--blue);border:1px solid rgba(107,163,214,.2);font-size:11px;padding:2px 8px;border-radius:4px}
+
+/* SWAP LIST */
+.swap-list{display:flex;flex-direction:column;gap:10px}
+.swap-item{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);
+  padding:14px 18px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.swap-item:hover{border-color:var(--b1)}
+
+/* STATE BADGES */
+.state{font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px}
+.s-draft{background:rgba(107,94,78,.2);color:#A89870}
+.s-in_review{background:rgba(107,163,214,.14);color:var(--blue)}
+.s-matched{background:rgba(160,140,220,.14);color:#A88FD4}
+.s-in_progress{background:rgba(232,184,75,.14);color:var(--gold)}
+.s-validation{background:rgba(245,208,122,.14);color:var(--gold2)}
+.s-closed{background:rgba(93,184,122,.14);color:var(--green)}
+.s-open{background:rgba(107,163,214,.14);color:var(--blue)}
+.s-committed{background:rgba(232,184,75,.14);color:var(--gold)}
+.s-settled{background:rgba(93,184,122,.14);color:var(--green)}
+
+/* STEPS */
+.steps{display:flex;align-items:center;gap:0;margin:8px 0;overflow-x:auto}
+.step{display:flex;align-items:center;font-size:10px;color:var(--txt3);white-space:nowrap}
+.step-dot{width:18px;height:18px;border-radius:50%;background:var(--s3);border:1.5px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:.3s}
+.step.done .step-dot{background:var(--green);border-color:var(--green);color:#fff}
+.step.cur .step-dot{background:var(--gold);border-color:var(--gold);color:#1a1200}
+.step-lbl{margin:0 3px;font-size:9.5px}
+.step-line{flex:1;min-width:10px;height:1px;background:var(--b2)}
+.step.done .step-line{background:var(--green)}
+
+/* PROFILE HERO */
+.prof-hero{background:linear-gradient(135deg,var(--s1),var(--s2));border:1px solid var(--b2);
+  border-radius:var(--rXL);padding:30px;margin-bottom:22px;position:relative;overflow:hidden}
+.prof-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;
+  border-radius:50%;background:radial-gradient(circle,rgba(232,184,75,.15),transparent 70%)}
+.prof-av-lg{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;
+  font-size:28px;font-weight:700;color:#1a1200;margin-bottom:14px}
+.prof-name{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:400;margin-bottom:3px}
+.prof-meta{font-size:12.5px;color:var(--txt2);margin-bottom:16px}
+.prof-stats{display:flex;gap:28px}
+.psv{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold)}
+.psl{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)}
+.trust-track{height:5px;background:var(--s3);border-radius:3px;overflow:hidden;margin-top:12px}
+.trust-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);
+  backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.overlay.on{display:flex}
+.modal{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rXL);
+  padding:28px 30px;width:90%;max-width:470px;max-height:88vh;overflow-y:auto;
+  animation:mIn .25s cubic-bezier(.34,1.4,.64,1);position:relative}
+@keyframes mIn{from{transform:scale(.92) translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:400;
+  margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--b2)}
+.mcl{position:absolute;top:16px;right:16px;background:var(--s2);border:none;color:var(--txt2);
+  cursor:pointer;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:14px;transition:.15s}
+.mcl:hover{background:var(--s3);color:var(--txt1)}
+.mft{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--b2)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* TEXTAREA + SELECT */
+.fsel,.ftxt{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
+  color:var(--txt1);font-family:'Outfit',sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:.15s}
+.fsel:focus,.ftxt:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,75,.1)}
+.fsel option{background:var(--s2)}
+.ftxt{resize:vertical;min-height:72px}
+
+/* TOAST */
+.toast-box{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:11px 15px;
+  font-size:13px;max-width:290px;animation:tIn .22s ease;display:flex;align-items:center;gap:9px;box-shadow:var(--sh)}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--gold)}
+@keyframes tIn{from{transform:translateX(28px);opacity:0}to{transform:none;opacity:1}}
+
+/* LOADING */
+.ldg{display:flex;align-items:center;justify-content:center;padding:50px;color:var(--txt3);gap:10px}
+.spin{width:17px;height:17px;border:2px solid var(--b1);border-top-color:var(--gold);
+  border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{display:flex;flex-direction:column;align-items:center;padding:55px 20px;text-align:center;color:var(--txt3)}
+.empty .ico{font-size:2.2rem;margin-bottom:10px;opacity:.45}
+.empty p{font-size:13px;max-width:240px;line-height:1.55}
+
+/* MISC */
+.flex{display:flex;align-items:center}
+.gap8{gap:8px} .gap12{gap:12px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt20{margin-top:20px}
+.mb14{margin-bottom:14px}
+.muted{color:var(--txt2);font-size:13px}
+.small{font-size:12px;color:var(--txt3)}
+.sep{height:1px;background:var(--b2);margin:20px 0}
+.mono{font-family:'JetBrains Mono',monospace}
+.highlight-bar{background:linear-gradient(90deg,rgba(232,184,75,.12),transparent);
+  border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;margin:10px 0}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH SCREENS ══════════════ -->
+<div id="authWrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="mark">SkillSwap</div>
+      <div class="sub">Learn · Teach · Exchange</div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab on" id="tabLogin" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" id="tabReg"   onclick="switchTab('reg')">Create Account</div>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div id="formLogin">
+      <div class="auth-err" id="loginErr"></div>
+      <div class="fgrp"><label class="flbl">Username</label>
+        <input class="finp" id="li-user" placeholder="your username" autocomplete="username"/></div>
+      <div class="fgrp"><label class="flbl">Password</label>
+        <input class="finp" id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="btn-main" id="loginBtn" onclick="doLogin()">Sign In →</button>
+    </div>
+
+    <!-- ── REGISTER ── -->
+    <div id="formReg" style="display:none">
+      <div class="bonus-badge">
+        <div class="ico">🪙</div>
+        <p>New members receive <strong>100 Swap-Coins</strong> to start trading skills immediately.</p>
+      </div>
+      <div class="auth-err" id="regErr"></div>
+      <div class="auth-ok" id="regOk"></div>
+      <div class="finp-row">
+        <div class="fgrp"><label class="flbl">First Name</label>
+          <input class="finp" id="r-fname" placeholder="Alice"/></div>
+        <div class="fgrp"><label class="flbl">Last Name</label>
+          <input class="finp" id="r-lname" placeholder="Chen"/></div>
+      </div>
+      <div class="fgrp"><label class="flbl">Username</label>
+        <input class="finp" id="r-user" placeholder="alice_chen" autocomplete="username"/></div>
+      <div class="fgrp"><label class="flbl">Email</label>
+        <input class="finp" id="r-email" type="email" placeholder="alice@example.com"/></div>
+      <div class="fgrp"><label class="flbl">Password <span style="color:var(--txt3)">(min 6 chars)</span></label>
+        <input class="finp" id="r-pass" type="password" placeholder="••••••••" autocomplete="new-password"/></div>
+      <button class="btn-main" id="regBtn" onclick="doRegister()">Create Account & Get 100 Coins →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ APP SHELL ══════════════ -->
+<div id="appWrap">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="mark">SkillSwap</div><div class="sub">Exchange · Learn · Grow</div></div>
+
+    <div class="sb-sec">Discover</div>
+    <div class="sb-item on" onclick="go('home')"><span class="ico">⌂</span> Home</div>
+    <div class="sb-item" onclick="go('explore')"><span class="ico">◈</span> Explore</div>
+    <div class="sb-item" onclick="go('match')"><span class="ico">⇌</span> Smart Match</div>
+    <div class="sb-item" onclick="go('library')"><span class="ico">▦</span> Resources</div>
+
+    <div class="sb-sec">Engage</div>
+    <div class="sb-item" onclick="go('teach')"><span class="ico">✦</span> Teach a Skill</div>
+    <div class="sb-item" onclick="go('swaps')"><span class="ico">↻</span> My Swaps</div>
+    <div class="sb-item" onclick="go('bounties')"><span class="ico">◎</span> Bounties</div>
+    <div class="sb-item" onclick="go('activity')"><span class="ico">◉</span> My Activity</div>
+    <div class="sb-item" onclick="go('workshops')"><span class="ico">◻</span> Workshops</div>
+    
+
+
+    <div class="sb-sec">You</div>
+    <div class="sb-item" onclick="go('profile')"><span class="ico">◯</span> My Profile</div>
+    <div class="sb-item" onclick="go('community')"><span class="ico">◑</span> Community</div>
+
+    <div class="sb-foot">
+      <div class="sb-user" onclick="go('profile')">
+        <div class="sb-av" id="sbAv">?</div>
+        <div><div class="sb-uname" id="sbName">—</div><div class="sb-coins" id="sbCoins">—</div></div>
+      </div>
+      <button class="sb-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="topTitle">Home</span>
+      <div class="topbar-right">
+        <div class="search-wrap">
+          <span style="color:var(--txt3)">⌕</span>
+          <input type="text" placeholder="Search skills, users…" id="gSearch" oninput="handleSearch()"/>
+        </div>
+        <button class="btn btn-gold btn-sm" id="topBtn" onclick="topAction()">+ New</button>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <section class="page on" id="p-home">
+      <div id="heroGreet" style="margin-bottom:24px">
+        <h1 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;line-height:1.2;margin-bottom:6px">
+          Welcome back, <span id="heroName" style="color:var(--gold)">—</span>
+        </h1>
+        <p class="muted">Your skill exchange journey continues. Here's what's happening.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-lbl">Your Balance</div><div class="stat-val mono" id="hCoins">—</div><div class="stat-sub">Swap-Coins</div></div>
+        <div class="stat-card"><div class="stat-lbl">Your Swaps</div><div class="stat-val" id="hSwaps">—</div><div class="stat-sub">total exchanges</div></div>
+        <div class="stat-card"><div class="stat-lbl">Reputation</div><div class="stat-val" id="hRep">—</div><div class="stat-sub">trust score</div></div>
+        <div class="stat-card"><div class="stat-lbl">Trust Level</div><div class="stat-val" id="hTrust">—</div><div class="stat-sub">out of 5</div></div>
+      </div>
+      <div class="sh"><h2>Recent Activity</h2><button class="btn btn-ghost btn-sm" onclick="go('explore')">View All →</button></div>
+      <div class="grid2" id="homeGrid"><div class="ldg"><div class="spin"></div> Loading…</div></div>
+    </section>
+
+    <!-- EXPLORE -->
+    <section class="page" id="p-explore">
+      <div class="sh"><h2>Explore Community</h2>
+        <div class="flex gap8">
+          <select class="fsel" style="width:130px" id="filterType" onchange="loadExplore()">
+            <option value="">All</option><option value="bounty">Bounties</option>
+            <option value="workshop">Workshops</option><option value="resource">Resources</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadExplore()">↻</button>
+        </div>
+      </div>
+      <div class="grid2" id="exploreGrid"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+
+    <!-- MATCH -->
+    <section class="page" id="p-match">
+      <div class="sh"><h2>Smart Match</h2>
+        <button class="btn btn-gold btn-sm" onclick="loadMatch()">⇌ Find Matches</button></div>
+      <div class="highlight-bar">Finds people where <strong>you offer what they need</strong> AND <strong>they offer what you need</strong>. Falls back to 3-way circular chains.</div>
+      <div class="mt20" id="matchBox"><div class="empty"><div class="ico">⇌</div><p>Click "Find Matches" to run the algorithm</p></div></div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section class="page" id="p-library">
+      <div class="sh"><h2>Resource Library</h2>
+        <button class="btn btn-gold btn-sm" onclick="openM('m-res')">+ Upload</button></div>
+      <div class="flex gap8 mb14" style="flex-wrap:wrap" id="libFilters"></div>
+      <div class="grid2" id="libGrid"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+
+    <!-- TEACH A SKILL -->
+    <section class="page" id="p-teach">
+      <div class="sh"><h2>Teach a Skill</h2></div>
+      <p class="muted mb14">Share your knowledge with the community. Post a skill you can teach — others can reach out to swap or join your sessions.</p>
+      <div class="card" style="max-width:600px">
+        <div class="modal-title" style="font-size:1.2rem;border-bottom:1px solid var(--b2);padding-bottom:12px;margin-bottom:18px">Post a Skill You Can Teach</div>
+        <div class="fgrp"><label class="flbl">Skill Name / Title</label>
+          <input class="finp" id="ts-title" placeholder="e.g. Python for Beginners, Watercolour Painting"/></div>
+        <div class="frow">
+          <div class="fgrp"><label class="flbl">Skill Category</label>
+            <input class="finp" id="ts-skill" placeholder="e.g. Photography, Music"/></div>
+          <div class="fgrp"><label class="flbl">Format</label>
+            <select class="fsel" id="ts-format">
+              <option value="1-on-1 Swap">1-on-1 Swap</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Bounty">Bounty</option>
+            </select></div>
+        </div>
+        <div class="fgrp"><label class="flbl">Description</label>
+          <textarea class="ftxt" id="ts-desc" style="min-height:90px" placeholder="Describe what you'll teach, your experience level, what the learner will gain…"></textarea></div>
+        <div class="frow">
+          <div class="fgrp"><label class="flbl">Duration (e.g. 1 hour)</label>
+            <input class="finp" id="ts-duration" placeholder="1 hour"/></div>
+          <div class="fgrp"><label class="flbl">Swap-Coins (0 = free)</label>
+            <input class="finp" id="ts-coins" type="number" min="0" value="0"/></div>
+        </div>
+        <!-- Workshop extras (shown when format = Workshop) -->
+        <div id="ws-extras" style="display:none">
+          <div class="frow">
+            <div class="fgrp"><label class="flbl">Max Seats</label>
+              <input class="finp" id="ts-seats" type="number" min="1" value="10"/></div>
+            <div class="fgrp"><label class="flbl">Date & Time</label>
+              <input class="finp" id="ts-date" type="datetime-local"/></div>
+          </div>
+        </div>
+        <div id="bounty-extra" style="display:none">
+          <div class="fgrp"><label class="flbl">Reward Coins (for bounty)</label>
+            <input class="finp" id="ts-reward" type="number" min="1" value="10"/></div>
+        </div>
+        <button class="btn btn-gold" style="width:100%;padding:11px;margin-top:6px" onclick="postTeach()">Post Skill Listing →</button>
+        <div id="ts-msg" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <!-- SWAPS -->
+    <section class="page" id="p-swaps">
+      <div class="sh"><h2>My Swaps</h2>
+        <button class="btn btn-gold btn-sm" onclick="openM('m-swap')">+ Initiate Swap</button></div>
+      <div class="swap-list" id="swapList"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+
+    <!-- BOUNTIES -->
+    <section class="page" id="p-bounties">
+      <div class="sh"><h2>Bounty Board</h2>
+        <button class="btn btn-gold btn-sm" onclick="openM('m-bounty')">+ Post Bounty</button></div>
+      <div class="grid2" id="bGrid"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+
+    <!-- WORKSHOPS -->
+    <section class="page" id="p-workshops">
+      <div class="sh"><h2>Workshop Hub</h2>
+        <button class="btn btn-gold btn-sm" onclick="openM('m-workshop')">+ Create Workshop</button></div>
+      <div class="grid2" id="wsGrid"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="page" id="p-profile">
+      <div class="prof-hero">
+        <div class="prof-av-lg" id="pAvLg">?</div>
+        <div class="prof-name" id="pName">—</div>
+        <div class="prof-meta" id="pMeta">—</div>
+        <div class="prof-stats">
+          <div><div class="psv mono" id="pCoins">—</div><div class="psl">Coins</div></div>
+          <div><div class="psv" id="pRep">—</div><div class="psl">Reputation</div></div>
+          <div><div class="psv" id="pTrust">—</div><div class="psl">Trust Lvl</div></div>
+        </div>
+        <div class="trust-track mt12"><div class="trust-fill" id="trustFill" style="width:0%"></div></div>
+      </div>
+      <div class="frow">
+        <div class="card"><h3 style="margin-bottom:10px;font-size:.95rem">Skills I Offer</h3>
+          <div class="tags" id="offeredList"></div></div>
+        <div class="card"><h3 style="margin-bottom:10px;font-size:.95rem">Skills I Want</h3>
+          <div class="tags" id="wantedList"></div></div>
+      </div>
+      <div class="mt12 card">
+        <h3 style="font-size:.95rem;margin-bottom:12px">Add Skills to Profile</h3>
+        <div class="flex gap8" style="flex-wrap:wrap">
+          <input class="finp" style="width:180px" id="addOff" placeholder="Skill name (e.g. Python)"/>
+          <button class="btn btn-ghost btn-sm" onclick="addSkill('offered')">+ Add Offered</button>
+          <input class="finp" style="width:180px" id="addWnt" placeholder="Skill name (e.g. Spanish)"/>
+          <button class="btn btn-ghost btn-sm" onclick="addSkill('wanted')">+ Add Wanted</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMUNITY -->
+    <section class="page" id="p-community">
+      <div class="sh"><h2>Community Members</h2></div>
+      <div class="grid2" id="commGrid"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+
+    <!-- MY ACTIVITY (private dashboard for bounties & swap contact info) -->
+    <section class="page" id="p-activity">
+      <div class="sh">
+        <h2>My Activity</h2>
+        <button class="btn btn-ghost btn-sm" onclick="loadMyActivity()">↻ Refresh</button>
+      </div>
+
+      <!-- COMMITTED BOUNTIES I POSTED -->
+      <div class="sh mt20" style="margin-bottom:10px">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:400">
+          📌 Bounties I Posted
+        </h3>
+      </div>
+      <div class="grid2" id="actPostedGrid"><div class="ldg"><div class="spin"></div></div></div>
+
+      <!-- BOUNTIES I CLAIMED / AM SOLVING -->  
+      <div class="sh mt20" style="margin-bottom:10px">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:400">
+          🛠️ Bounties I'm Solving
+        </h3>
+      </div>
+      <div class="grid2" id="actClaimedGrid"><div class="ldg"><div class="spin"></div></div></div>
+    </section>
+  </main>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+<!-- NEW SWAP -->
+<div class="overlay" id="m-swap">
+  <div class="modal">
+    <button class="mcl" onclick="closeM('m-swap')">✕</button>
+    <div class="modal-title">Initiate a Swap</div>
+    <div class="fgrp"><label class="flbl">Provider (who you swap with)</label><select class="fsel" id="sw-prov"></select></div>
+    <div class="frow">
+      <div class="fgrp"><label class="flbl">Skill I Want</label><input class="finp" id="sw-req" placeholder="e.g. Spanish lessons"/></div>
+      <div class="fgrp"><label class="flbl">Skill I Offer</label><input class="finp" id="sw-off" placeholder="e.g. Python tutoring"/></div>
+    </div>
+    <div class="fgrp"><label class="flbl">Escrow Coins (optional)</label>
+      <input class="finp" id="sw-esc" type="number" min="0" value="0"/></div>
+    <div class="fgrp"><label class="flbl">Notes</label>
+      <textarea class="ftxt" id="sw-notes" placeholder="Describe the exchange…"></textarea></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeM('m-swap')">Cancel</button>
+      <button class="btn btn-gold" onclick="doSwap()">Initiate →</button></div>
+  </div>
+</div>
+
+<!-- NEW BOUNTY -->
+<div class="overlay" id="m-bounty">
+  <div class="modal">
+    <button class="mcl" onclick="closeM('m-bounty')">✕</button>
+    <div class="modal-title">Post a Bounty</div>
+    <div class="fgrp"><label class="flbl">Title</label><input class="finp" id="bn-title" placeholder="e.g. Need logo design help"/></div>
+    <div class="fgrp"><label class="flbl">Skill</label><input class="finp" id="bn-skill" placeholder="e.g. Python, Graphic Design"/></div>
+    <div class="fgrp"><label class="flbl">Description</label><textarea class="ftxt" id="bn-desc" placeholder="What do you need?"></textarea></div>
+    <div class="fgrp"><label class="flbl">Reward Coins</label><input class="finp" id="bn-coins" type="number" min="1" value="10"/></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeM('m-bounty')">Cancel</button>
+      <button class="btn btn-gold" onclick="doBounty()">Post Bounty →</button></div>
+  </div>
+</div>
+
+<!-- NEW WORKSHOP -->
+<div class="overlay" id="m-workshop">
+  <div class="modal">
+    <button class="mcl" onclick="closeM('m-workshop')">✕</button>
+    <div class="modal-title">Create Workshop</div>
+    <div class="fgrp"><label class="flbl">Title</label><input class="finp" id="wf-title" placeholder="e.g. Intro to Python"/></div>
+    <div class="fgrp"><label class="flbl">Skill</label><input class="finp" id="wf-skill" placeholder="e.g. Web Development"/></div>
+    <div class="fgrp"><label class="flbl">Description</label><textarea class="ftxt" id="wf-desc"></textarea></div>
+    <div class="frow">
+      <div class="fgrp"><label class="flbl">Max Seats</label><input class="finp" id="wf-seats" type="number" min="1" value="10"/></div>
+      <div class="fgrp"><label class="flbl">Cost / Seat</label><input class="finp" id="wf-cost" type="number" min="0" value="0"/></div>
+    </div>
+    <div class="fgrp"><label class="flbl">Date & Time</label><input class="finp" id="wf-date" type="datetime-local"/></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeM('m-workshop')">Cancel</button>
+      <button class="btn btn-gold" onclick="doWorkshop()">Create →</button></div>
+  </div>
+</div>
+
+<!-- UPLOAD RESOURCE -->
+<div class="overlay" id="m-res">
+  <div class="modal">
+    <button class="mcl" onclick="closeM('m-res')">✕</button>
+    <div class="modal-title">Upload Resource</div>
+    <div class="fgrp"><label class="flbl">Title</label><input class="finp" id="rs-title" placeholder="Python Crash Course"/></div>
+    <div class="frow">
+      <div class="fgrp"><label class="flbl">Skill</label><input class="finp" id="rs-skill" placeholder="e.g. Data Science"/></div>
+      <div class="fgrp"><label class="flbl">Type</label>
+        <select class="fsel" id="rs-type"><option value="link">Link</option><option value="pdf">PDF</option><option value="video">Video</option></select></div>
+    </div>
+    <div class="fgrp"><label class="flbl">URL</label><input class="finp" id="rs-url" placeholder="https://…"/></div>
+    <div class="fgrp"><label class="flbl">Description</label><textarea class="ftxt" id="rs-desc" style="min-height:60px"></textarea></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeM('m-res')">Cancel</button>
+      <button class="btn btn-gold" onclick="doResource()">Upload →</button></div>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="overlay" id="m-review">
+  <div class="modal">
+    <button class="mcl" onclick="closeM('m-review')">✕</button>
+    <div class="modal-title">Submit Review</div>
+    <input type="hidden" id="rv-swap"/><input type="hidden" id="rv-reviewee"/>
+    <div class="fgrp"><label class="flbl">Rating (1–5)</label>
+      <input class="finp" id="rv-rating" type="number" min="1" max="5" step="0.1" value="5"/></div>
+    <div class="fgrp"><label class="flbl">Comment</label>
+      <textarea class="ftxt" id="rv-comment" placeholder="Share your experience…"></textarea></div>
+    <div class="mft"><button class="btn btn-ghost" onclick="closeM('m-review')">Cancel</button>
+      <button class="btn btn-gold" onclick="doReview()">Submit →</button></div>
+  </div>
+</div>
+
+<div class="toast-box" id="toasts"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CONFIG & STATE
+═══════════════════════════════════════════════ */
+
+const API_CONFIG = {
+    // Check your terminal: if it says 52091, use that. Otherwise, keep 8000.
+    BASE_URL: 'http://127.0.0.1:8000', 
+    ENDPOINTS: {
+        LOGIN: '/api/v1/token',
+        USERS: '/api/v1/users',
+        SWAPS: '/api/v1/swaps',
+        // ADD THIS LINE: It matches the "404" path from your logs
+        USER_SWAPS: (id) => `/api/v1/users/${id}/swaps` 
+    }
+};
+
+let me = null;          // current user object
+let token = null;       // JWT string
+let skills = [];        // all skill types
+let users  = [];        // all users
+
+const PAGE_TITLES = {
+  home:'Home', explore:'Explore', match:'Smart Match', library:'Resource Library',
+  teach:'Teach a Skill', swaps:'My Swaps', bounties:'Bounty Board',
+  workshops:'Workshop Hub', profile:'My Profile', community:'Community',
+  activity:'My Activity'   // ← ADD THIS
+};
+
+/* ═══════════════════════════════════════════════
+   API HELPERS
+═══════════════════════════════════════════════ */
+async function api(path, opts={}) {
+  const headers = {'Content-Type':'application/json'};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  try {
+    const r = await fetch(API_CONFIG.BASE_URL + path, {...opts, headers: {...headers, ...(opts.headers||{})}});
+    if (!r.ok) {
+      const e = await r.json().catch(()=>({detail: r.statusText}));
+      throw new Error(e.detail || 'Request failed');
+    }
+    return r.json();
+  } catch(e) {
+    if (e.message?.includes('Failed to fetch'))
+      throw new Error('Cannot reach API — make sure uvicorn is running on port 8000');
+    throw e;
+  }
+}
+const get  = path => api(path);
+const post = (path,body) => api(path,{method:'POST',body:JSON.stringify(body)});
+const put  = (path,body={}) => api(path,{method:'PUT',body:JSON.stringify(body)});
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+function toast(msg, type='info') {
+  const icons = {ok:'✓', err:'✕', info:'◈'};
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span style="opacity:.6">${icons[type]||'◈'}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════ */
+function switchTab(t) {
+  document.getElementById('formLogin').style.display = t==='login' ? '' : 'none';
+  document.getElementById('formReg').style.display   = t==='reg'   ? '' : 'none';
+  document.getElementById('tabLogin').className = 'auth-tab' + (t==='login' ? ' on' : '');
+  document.getElementById('tabReg').className   = 'auth-tab' + (t==='reg'   ? ' on' : '');
+  clearAuthMsgs();
+}
+
+function clearAuthMsgs() {
+  ['loginErr','regErr','regOk'].forEach(id=>{ const el=document.getElementById(id); el.style.display='none'; el.textContent=''; });
+}
+
+function showAuthErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function doLogin() {
+  clearAuthMsgs();
+  const username = document.getElementById('li-user').value.trim();
+  const password = document.getElementById('li-pass').value;
+  if (!username || !password) { showAuthErr('loginErr','Please fill in all fields.'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const data = await post('/api/v1/auth/login', {username, password});
+    onAuth(data);
+  } catch(e) {
+    showAuthErr('loginErr', e.message);
+    btn.disabled = false; btn.textContent = 'Sign In →';
+  }
+}
+
+async function doRegister() {
+  clearAuthMsgs();
+  const fname    = document.getElementById('r-fname').value.trim();
+  const lname    = document.getElementById('r-lname').value.trim();
+  const username = document.getElementById('r-user').value.trim();
+  const email    = document.getElementById('r-email').value.trim();
+  const password = document.getElementById('r-pass').value;
+  if (!fname||!username||!email||!password) { showAuthErr('regErr','All fields are required.'); return; }
+  if (password.length < 6) { showAuthErr('regErr','Password must be at least 6 characters.'); return; }
+  const btn = document.getElementById('regBtn');
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  try {
+    const data = await post(`${API_CONFIG.ENDPOINTS.AUTH}/register`,{
+      username, email, full_name:`${fname} ${lname}`.trim(), password
+    });
+    const ok = document.getElementById('regOk');
+    ok.textContent = `Account created! Welcome, ${data.username}. You've received 100 Swap-Coins 🎉`;
+    ok.style.display = 'block';
+    setTimeout(() => onAuth(data), 900);
+  } catch(e) {
+    showAuthErr('regErr', e.message);
+    btn.disabled = false; btn.textContent = 'Create Account & Get 100 Coins →';
+  }
+}
+
+function onAuth(data) {
+  // data = TokenResponse from backend
+  token = data.access_token;
+  me = { id: data.user_id, username: data.username,
+         full_name: data.full_name, wallet_balance: data.wallet_balance,
+         reputation_score: 0, trust_level: 1, skills_offered:[], skills_wanted:[] };
+  localStorage.setItem('ss_token', token);
+  localStorage.setItem('ss_uid',   data.user_id);
+  document.getElementById('authWrap').classList.add('hidden');
+  document.getElementById('appWrap').classList.add('on');
+  updateSidebar();
+  refreshMe();
+  loadSkills().then(()=>{ go('home'); });
+}
+
+function logout() {
+  token = null; me = null;
+  localStorage.removeItem('ss_token');
+  localStorage.removeItem('ss_uid');
+  document.getElementById('appWrap').classList.remove('on');
+  document.getElementById('authWrap').classList.remove('hidden');
+  clearAuthMsgs();
+  document.getElementById('li-user').value = '';
+  document.getElementById('li-pass').value = '';
+  switchTab('login');
+}
+
+// Try to restore session from localStorage on page load
+async function tryRestoreSession() {
+  const savedToken = localStorage.getItem('ss_token');
+  const savedUid   = localStorage.getItem('ss_uid');
+  if (!savedToken || !savedUid) return;
+  token = savedToken;
+  try {
+    const user = await get(`/api/v1/users/${savedUid}`);
+    me = user;
+    document.getElementById('authWrap').classList.add('hidden');
+    document.getElementById('appWrap').classList.add('on');
+    updateSidebar();
+    await loadSkills();
+    go('home');
+  } catch(e) {
+    token = null;
+    localStorage.removeItem('ss_token');
+    localStorage.removeItem('ss_uid');
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+function go(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('p-'+page).classList.add('on');
+  document.querySelectorAll('.sb-item').forEach(n=>{
+    if (n.getAttribute('onclick')?.includes(`'${page}'`)) n.classList.add('on');
+  });
+  document.getElementById('topTitle').textContent = PAGE_TITLES[page]||page;
+
+  // toggle teach-format extras
+  document.getElementById('ts-format')?.addEventListener('change', toggleTeachExtras);
+
+  const loaders = {
+    home:()=>loadHome(), explore:()=>loadExplore(), match:()=>{},
+    library:()=>loadLibrary(), teach:()=>loadSkills().then(populateAllSelects),
+    swaps:()=>loadSwaps(), bounties:()=>loadBounties(),
+    workshops:()=>loadWorkshops(), profile:()=>loadProfile(), community:()=>loadCommunity(), activity:()=>loadMyActivity()
+
+  };
+  loaders[page]?.();
+}
+
+function topAction() {
+  const p = document.querySelector('.page.on')?.id?.replace('p-','');
+  if (p==='swaps')     return openM('m-swap');
+  if (p==='bounties')  return openM('m-bounty');
+  if (p==='workshops') return openM('m-workshop');
+  if (p==='library')   return openM('m-res');
+  if (p==='teach')     return document.getElementById('ts-title')?.focus();
+  openM('m-bounty');
+}
+
+/* ═══════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════ */
+function openM(id) {
+  populateAllSelects();
+  document.getElementById(id).classList.add('on');
+}
+function closeM(id) { document.getElementById(id).classList.remove('on'); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.overlay.on').forEach(m=>m.classList.remove('on'));
+});
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════ */
+// Replace the existing ago() function entirely:
+function ago(d) {
+  if (!d) return '—';
+  let s = String(d);
+  // Backend returns naive UTC strings like "2024-01-15T10:30:00"
+  // Without the Z suffix, JS treats them as LOCAL time → wrong diff.
+  if (!s.includes('+') && !s.endsWith('Z')) s += 'Z';
+  const diff = Date.now() - new Date(s);
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+function initials(name) { return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function stars(n) { const f=Math.round(n||0); return '★'.repeat(f)+'☆'.repeat(5-f); }
+
+function updateSidebar() {
+  if (!me) return;
+  document.getElementById('sbAv').textContent    = initials(me.full_name||me.username);
+  document.getElementById('sbName').textContent  = me.full_name||me.username;
+  document.getElementById('sbCoins').textContent = `⟡ ${me.wallet_balance} coins`;
+}
+
+async function refreshMe() {
+  if (!me) return;
+  try { me = await get(`/api/v1/users/${me.id}`); updateSidebar(); } catch{}
+}
+
+/* ═══════════════════════════════════════════════
+   SKILLS CATALOGUE
+═══════════════════════════════════════════════ */
+async function loadSkills() {
+  if (skills.length) return;
+  skills = await get('/api/v1/skills').catch(()=>[]);
+}
+
+// Resolve a skill name to an ID, creating it on the backend if it doesn't exist yet.
+async function getOrCreateSkill(name) {
+  name = (name||'').trim();
+  if (!name) return null;
+  await loadSkills();
+  const existing = skills.find(s => s.name.toLowerCase() === name.toLowerCase());
+  if (existing) return existing.id;
+  try {
+    const created = await api('/api/v1/skills', {method:'POST', body: JSON.stringify({name, category:'General'})});
+    skills.push(created);
+    return created.id;
+  } catch(e) {
+    throw new Error(`Could not create skill "${name}": ${e.message}`);
+  }
+}
+
+function populateAllSelects() {
+  // Skill fields are now free-text inputs — only populate the user (provider) select.
+  const uopts = users.filter(u=>u.id!==me?.id)
+    .map(u=>`<option value="${u.id}">${u.username} — ${u.full_name||u.email}</option>`).join('');
+  const sp = document.getElementById('sw-prov');
+  if (sp) sp.innerHTML = uopts;
+}
+
+/* ═══════════════════════════════════════════════
+   HOME
+═══════════════════════════════════════════════ */
+async function loadHome() {
+  document.getElementById('heroName').textContent = me?.full_name?.split(' ')[0] || me?.username || '—';
+  document.getElementById('hCoins').textContent   = me?.wallet_balance ?? '—';
+  document.getElementById('hRep').textContent     = (me?.reputation_score||0).toFixed(1);
+  document.getElementById('hTrust').textContent   = `Lvl ${me?.trust_level||1}`;
+
+  // count user's swaps for stat
+  const swaps = await get(`/api/v1/users/${me.id}/swaps`).catch(()=>[]);
+  document.getElementById('hSwaps').textContent = swaps.length;
+
+  const grid = document.getElementById('homeGrid');
+  try {
+    const feed = await get('/api/v1/feed');
+    if (!feed.length) { grid.innerHTML = emptyHtml('◈','Nothing in the feed yet. Post a bounty or create a workshop!'); return; }
+    grid.innerHTML = feed.slice(0,6).map(f=>feedCardHtml(f)).join('');
+  } catch(e) { grid.innerHTML = emptyHtml('✕', e.message); }
+}
+
+/* ═══════════════════════════════════════════════
+   EXPLORE
+═══════════════════════════════════════════════ */
+async function loadExplore() {
+  const grid = document.getElementById('exploreGrid');
+  const filter = document.getElementById('filterType')?.value;
+  grid.innerHTML = ldgHtml();
+  try {
+    const feed = await get('/api/v1/feed');
+    const items = filter ? feed.filter(f=>f.type===filter) : feed;
+    if (!items.length) { grid.innerHTML = emptyHtml('◈','Nothing here yet.'); return; }
+    grid.innerHTML = items.map(f=>feedCardHtml(f)).join('');
+  } catch(e) { grid.innerHTML = emptyHtml('✕',e.message); }
+}
+
+function feedCardHtml(f) {
+  const hot = f.type==='bounty' && f.extra?.is_highlighted;
+  const bmap = {bounty:'b-bounty',workshop:'b-workshop',resource:'b-resource'};
+  const imap = {bounty:'◎',workshop:'◻',resource:'▦'};
+  let extra='', action='';
+  if (f.type==='bounty') {
+    extra = `<span class="coin">⟡ ${f.extra.reward_coins}</span>`;
+    if (f.extra.poster_id!==me?.id)
+      action = `<button class="btn btn-ghost btn-xs" onclick="claimBounty(${f.id},event)">Claim</button>`;
+  }
+  if (f.type==='workshop') {
+    extra = `<span class="tag">🪑 ${f.extra.available_seats} seats</span>`;
+    if (f.extra.host_id!==me?.id)
+      action = `<button class="btn btn-ghost btn-xs" onclick="joinWS(${f.id},event)">Join</button>`;
+  }
+  if (f.type==='resource') {
+    extra = `<span class="tag">${f.extra.resource_type}</span>`;
+    action = `<a href="${f.extra.url}" target="_blank" class="btn btn-ghost btn-xs">Open ↗</a>`;
+  }
+  return `
+  <div class="fcard${hot?' hot':''}">
+    <div class="badge ${bmap[f.type]}">${imap[f.type]} ${f.type}</div>
+    <h3>${f.title}</h3><p>${f.description}</p>
+    <div class="fcard-ft">
+      <div class="flex gap8">${f.skill_name?`<span class="tag">${f.skill_name}</span>`:''}${extra}</div>
+      <div class="flex gap8"><span class="small">${ago(f.created_at)}</span>${action}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   MATCH
+═══════════════════════════════════════════════ */
+async function loadMatch() {
+  const box = document.getElementById('matchBox');
+  box.innerHTML = ldgHtml('Running algorithm…');
+  try {
+    const res = await get(`/api/v1/match?user_id=${me.id}`);
+    let html = '';
+    if (res.direct_matches.length) {
+      html += `<div class="sh" style="margin-top:4px"><h2 style="font-size:1.1rem;color:var(--green)">✓ Direct Matches</h2></div>
+        <div class="grid2">${res.direct_matches.map(u=>`
+        <div class="mcard">
+          <div class="mcard-hd">
+            <div class="mav">${initials(u.username)}</div>
+            <div><div class="mname">${u.username}</div><div class="mrep">${stars(u.reputation_score)}</div></div>
+          </div>
+          <div class="skill-row"><div class="skill-row-lbl">Offers</div>
+            <div class="tags">${u.skills_offered.map(s=>`<span class="t-offer">${s}</span>`).join('')||'<span class="small">—</span>'}</div></div>
+          <div class="skill-row mt8"><div class="skill-row-lbl">Wants</div>
+            <div class="tags">${u.skills_wanted.map(s=>`<span class="t-want">${s}</span>`).join('')||'<span class="small">—</span>'}</div></div>
+          <button class="btn btn-gold btn-sm" style="width:100%;margin-top:12px" onclick="prefillSwap(${u.id})">↔ Initiate Swap</button>
+        </div>`).join('')}</div>`;
+    }
+    if (res.circular_matches.length) {
+      html += `<div class="sep"></div><div class="sh"><h2 style="font-size:1.1rem;color:var(--gold)">↻ Circular Matches</h2></div>
+        <div class="grid2">${res.circular_matches.map(c=>`
+        <div class="mcard" style="border-color:rgba(232,184,75,.3)">
+          <div style="font-size:11px;color:var(--gold);margin-bottom:8px">3-way chain</div>
+          <div class="mono" style="font-size:13px;color:var(--txt1)">${c.description}</div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="prefillSwap(${c.user_b.id})">Swap with ${c.user_b.username}</button>
+        </div>`).join('')}</div>`;
+    }
+    if (!html) html = emptyHtml('⇌','No matches yet. Add more skills to your profile and invite friends!');
+    box.innerHTML = html;
+  } catch(e) { box.innerHTML = emptyHtml('✕',e.message); }
+}
+
+function prefillSwap(uid) {
+  users.length || get('/api/v1/users').then(u=>{users=u; populateAllSelects();});
+  go('swaps');
+  setTimeout(()=>{ openM('m-swap'); document.getElementById('sw-prov').value=uid; }, 250);
+}
+
+/* ═══════════════════════════════════════════════
+   LIBRARY
+═══════════════════════════════════════════════ */
+async function loadLibrary(sid=null) {
+  await loadSkills();
+  const filters = document.getElementById('libFilters');
+  filters.innerHTML =
+    `<button class="btn ${!sid?'btn-gold':'btn-ghost'} btn-sm" onclick="loadLibrary(null)">All</button>` +
+    skills.map(s=>`<button class="btn ${sid===s.id?'btn-gold':'btn-ghost'} btn-sm" onclick="loadLibrary(${s.id})">${s.name}</button>`).join('');
+  const grid = document.getElementById('libGrid');
+  grid.innerHTML = ldgHtml();
+  try {
+    let res=[];
+    if (sid) { res = await get(`/api/v1/library/${sid}`); }
+    else { const all = await Promise.all(skills.map(s=>get(`/api/v1/library/${s.id}`).catch(()=>[]))); res=all.flat(); }
+    if (!res.length) { grid.innerHTML = emptyHtml('▦','No resources yet. Upload one!'); return; }
+    grid.innerHTML = res.map(r=>`
+      <div class="fcard">
+        <div class="badge b-resource">▦ ${r.resource_type}</div>
+        <h3>${r.title}</h3><p>${r.description||'No description.'}</p>
+        <div class="fcard-ft">
+          <span class="tag">${skills.find(s=>s.id===r.skill_id)?.name||'Unknown'}</span>
+          <a href="${r.url}" target="_blank" class="btn btn-ghost btn-xs">Open ↗</a>
+        </div>
+      </div>`).join('');
+  } catch(e) { grid.innerHTML = emptyHtml('✕',e.message); }
+}
+
+async function doResource() {
+  const title=document.getElementById('rs-title').value.trim();
+  const skillName=document.getElementById('rs-skill').value.trim();
+  const resource_type=document.getElementById('rs-type').value;
+  const url=document.getElementById('rs-url').value.trim();
+  const description=document.getElementById('rs-desc').value.trim();
+  if(!title||!url){toast('Title and URL required','err');return;}
+  try {
+    const skill_id = skillName ? await getOrCreateSkill(skillName) : null;
+    await api(`/api/v1/library?uploader_id=${me.id}`,{method:'POST',body:JSON.stringify({skill_id,title,resource_type,url,description})});
+    closeM('m-res'); toast('Resource uploaded!','ok'); loadLibrary();
+  } catch(e){toast(e.message,'err');}
+}
+
+/* ═══════════════════════════════════════════════
+   TEACH A SKILL
+═══════════════════════════════════════════════ */
+function toggleTeachExtras() {
+  const fmt = document.getElementById('ts-format')?.value;
+  document.getElementById('ws-extras').style.display     = fmt==='Workshop' ? '' : 'none';
+  document.getElementById('bounty-extra').style.display  = fmt==='Bounty'   ? '' : 'none';
+}
+
+async function postTeach() {
+  await loadSkills();
+  const title   = document.getElementById('ts-title').value.trim();
+  const skillName= document.getElementById('ts-skill').value.trim();
+  const format  = document.getElementById('ts-format').value;
+  const desc    = document.getElementById('ts-desc').value.trim();
+  const coins   = +document.getElementById('ts-coins').value||0;
+  const msg     = document.getElementById('ts-msg');
+  if (!title||!desc) { msg.innerHTML='<span style="color:var(--red)">Title and description are required.</span>'; return; }
+  msg.innerHTML='';
+  try {
+    const skill_id = skillName ? await getOrCreateSkill(skillName) : null;
+    if (format==='Workshop') {
+      const max_seats   = +document.getElementById('ts-seats').value||10;
+      const cost_per_seat=coins;
+      const scheduled_at=document.getElementById('ts-date').value;
+      if (!scheduled_at) { msg.innerHTML='<span style="color:var(--red)">Date is required for workshops.</span>'; return; }
+      await api(`/api/v1/workshops?host_id=${me.id}`,{method:'POST',body:JSON.stringify({skill_id,title,description:desc,max_seats,cost_per_seat,scheduled_at})});
+      msg.innerHTML='<span style="color:var(--green)">✓ Workshop created! Visible in Workshop Hub.</span>';
+    } else if (format==='Bounty') {
+      const reward_coins=+document.getElementById('ts-reward').value||10;
+      await api(`/api/v1/bounties?poster_id=${me.id}`,{method:'POST',body:JSON.stringify({skill_id,title,description:desc,reward_coins})});
+      msg.innerHTML='<span style="color:var(--green)">✓ Bounty posted! Visible on Bounty Board.</span>';
+      await refreshMe();
+    } else {
+      // 1-on-1 swap listing → post as a resource/guide for now
+      await api(`/api/v1/library?uploader_id=${me.id}`,{method:'POST',body:JSON.stringify({skill_id,title,resource_type:'link',url:'#',description:desc})});
+      msg.innerHTML='<span style="color:var(--green)">✓ Skill listing posted in Resource Library.</span>';
+    }
+    // clear form
+    ['ts-title','ts-desc','ts-coins','ts-duration','ts-skill'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  } catch(e) { msg.innerHTML=`<span style="color:var(--red)">${e.message}</span>`; }
+}
+
+/* ═══════════════════════════════════════════════
+   SWAPS
+═══════════════════════════════════════════════ */
+const STEPS=['draft','in_review','matched','in_progress','validation','closed'];
+
+async function loadSwaps() {
+  const list=document.getElementById('swapList');
+  list.innerHTML=ldgHtml();
+  if (!users.length) users = await get('/api/v1/users').catch(()=>[]);
+  try {
+    const swaps = await get(`/api/v1/users/${me.id}/swaps`);
+    if (!swaps.length){list.innerHTML=emptyHtml('↻','No swaps yet. Find a match and initiate one!');return;}
+    list.innerHTML=swaps.map(s=>swapHtml(s)).join('');
+  } catch(e){list.innerHTML=emptyHtml('✕',e.message);}
+}
+
+function swapHtml(s) {
+  const isReq=s.requester_id===me?.id;
+  const curIdx=STEPS.indexOf(s.state);
+  const stepsHtml=`<div class="steps">${STEPS.map((st,i)=>{
+    const cls=i<curIdx?'done':i===curIdx?'cur':'';
+    return`<div class="step ${cls}"><div class="step-dot">${i<curIdx?'✓':i+1}</div><span class="step-lbl">${st.replace('_',' ')}</span></div>${i<STEPS.length-1?'<div class="step-line"></div>':''}`;
+  }).join('')}</div>`;
+  const prov=users.find(u=>u.id===s.provider_id), req=users.find(u=>u.id===s.requester_id);
+  const other=isReq?prov:req;
+// Inside swapHtml(), replace the actions block:
+  let actions = '';
+  if (s.state === 'in_review' && !isReq) {
+    // Provider sees both Accept and Reject
+    actions = `
+      <div class="flex gap8" style="flex-direction:column;align-items:flex-end">
+        <button class="btn btn-gold btn-xs" onclick="advSwap(${s.id},'accept',${s.provider_id})">✓ Accept</button>
+        <button class="btn btn-red btn-xs"  onclick="rejectSwap(${s.id},${s.provider_id})">✕ Reject</button>
+      </div>`;
+  }
+  if (s.state === 'matched')     actions = `<button class="btn btn-ghost btn-xs" onclick="advSwap(${s.id},'start')">▶ Start</button>`;
+  if (s.state === 'in_progress') actions = `<button class="btn btn-ghost btn-xs" onclick="advSwap(${s.id},'validate')">✓ Mark Done</button>`;
+  if (s.state === 'validation')  actions = `<button class="btn btn-gold btn-xs"  onclick="advSwap(${s.id},'close')">⟡ Close & Release</button>`;
+  if (s.state === 'closed' && isReq) actions = `<button class="btn btn-ghost btn-xs" onclick="openRv(${s.id},${s.provider_id})">★ Review</button>`;
+  if (s.state === 'rejected')    actions = `<span class="state" style="background:rgba(224,96,96,.12);color:var(--red)">✕ Declined</span>`;
+  return`
+  <div class="swap-item">
+    <div>
+      <div class="flex gap8 mb14" style="margin-bottom:8px">
+        <span class="state s-${s.state}">${s.state.replace('_',' ')}</span>
+        <span class="small">Swap #${s.id} · ${isReq?'You requested':'Requested by'} ${other?.username||'?'}</span>
+        ${s.escrow_amount>0?`<span class="coin">⟡ ${s.escrow_amount} escrowed</span>`:''}
+      </div>
+      ${stepsHtml}
+      ${s.notes?`<div class="small mt8" style="color:var(--txt3)">"${s.notes}"</div>`:''}
+    </div>
+    <div>${actions}</div>
+  </div>`;
+}
+
+async function advSwap(id,action,extra) {
+  try {
+    let url=`/api/v1/swap/${id}/${action}`;
+    if(action==='accept') url+=`?provider_id=${extra||me.id}`;
+    await put(url);
+    toast(`Swap ${action}ed!`,'ok');
+    loadSwaps(); refreshMe();
+  } catch(e){toast(e.message,'err');}
+}
+
+async function doSwap() {
+  const provider_id=+document.getElementById('sw-prov').value;
+  const reqName=document.getElementById('sw-req').value.trim();
+  const offName=document.getElementById('sw-off').value.trim();
+  const escrow_amount=+document.getElementById('sw-esc').value||0;
+  const notes=document.getElementById('sw-notes').value.trim();
+  if(!provider_id){toast('Select a provider','err');return;}
+  try {
+    const skill_requested_id = reqName ? await getOrCreateSkill(reqName) : null;
+    const skill_offered_id   = offName ? await getOrCreateSkill(offName) : null;
+    await api(`/api/v1/swap/initiate?requester_id=${me.id}`,{method:'POST',body:JSON.stringify({provider_id,skill_requested_id,skill_offered_id,escrow_amount,notes})});
+    closeM('m-swap'); toast('Swap initiated!','ok'); go('swaps');
+  } catch(e){toast(e.message,'err');}
+}
+
+async function rejectSwap(id, providerId) {
+  try {
+    await put(`/api/v1/swap/${id}/reject?provider_id=${providerId}`);
+    toast('Swap request rejected.', 'info');
+    loadSwaps();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+/* ═══════════════════════════════════════════════
+   BOUNTIES
+═══════════════════════════════════════════════ */
+// Replace the existing loadBounties() function:
+async function loadBounties() {
+  const grid = document.getElementById('bGrid');
+  grid.innerHTML = ldgHtml();
+  try {
+    const list = await get('/api/v1/bounties'); // already filtered to OPEN on backend
+    if (!list.length) {
+      grid.innerHTML = emptyHtml('◎', 'No open bounties. Post one!');
+      return;
+    }
+    await loadSkills();
+    grid.innerHTML = list.map(b => `
+      <div class="fcard${b.is_highlighted ? ' hot' : ''}">
+        <div class="badge b-bounty">◎ bounty</div>
+        <span class="state s-open" style="margin-bottom:8px;display:inline-flex">OPEN</span>
+        <h3>${b.title}</h3>
+        <p>${b.description}</p>
+        <div class="small mt8" style="color:var(--txt3)">${ago(b.created_at)}</div>
+        <div class="fcard-ft">
+          <div class="flex gap8">
+            <span class="tag">${skills.find(s => s.id === b.skill_id)?.name || '?'}</span>
+            <span class="coin">⟡ ${b.reward_coins}</span>
+          </div>
+          ${b.poster_id === me?.id
+            ? `<span class="small" style="color:var(--txt3)">Your bounty</span>`
+            : `<button class="btn btn-gold btn-xs" onclick="claimBounty(${b.id})">Claim →</button>`
+          }
+        </div>
+      </div>`).join('');
+  } catch(e) { grid.innerHTML = emptyHtml('✕', e.message); }
+}
+
+async function doBounty() {
+  const title=document.getElementById('bn-title').value.trim();
+  const skillName=document.getElementById('bn-skill').value.trim();
+  const description=document.getElementById('bn-desc').value.trim();
+  const reward_coins=+document.getElementById('bn-coins').value;
+  if(!title||!description){toast('Fill all fields','err');return;}
+  try {
+    const skill_id = skillName ? await getOrCreateSkill(skillName) : null;
+    await api(`/api/v1/bounties?poster_id=${me.id}`,{method:'POST',body:JSON.stringify({skill_id,title,description,reward_coins})});
+    closeM('m-bounty'); toast('Bounty posted!','ok'); loadBounties(); refreshMe();
+  } catch(e){toast(e.message,'err');}
+}
+
+async function claimBounty(id,e) {
+  if(e)e.stopPropagation();
+  try {
+    await put(`/api/v1/bounties/${id}/commit?solver_id=${me.id}`);
+    toast('Bounty claimed! 💪','ok'); loadBounties(); loadExplore();
+  } catch(e){toast(e.message,'err');}
+}
+
+async function settleBounty(id) {
+  try {
+    await put(`/api/v1/bounties/${id}/settle?poster_id=${me.id}`);
+    toast('Settled! Coins released.','ok'); loadBounties(); refreshMe();
+  } catch(e){toast(e.message,'err');}
+}
+
+/* ═══════════════════════════════════════════════
+   MY ACTIVITY  (private bounty dashboard)
+═══════════════════════════════════════════════ */
+async function loadMyActivity() {
+  await loadSkills();
+
+  // ── Bounties I Posted ────────────────────────
+  const postedGrid = document.getElementById('actPostedGrid');
+  postedGrid.innerHTML = ldgHtml();
+  try {
+    const posted = await get(`/api/v1/users/${me.id}/bounties/posted`);
+    if (!posted.length) {
+      postedGrid.innerHTML = emptyHtml('◎', "You haven't posted any bounties yet.");
+    } else {
+      postedGrid.innerHTML = posted.map(b => {
+        const skillName = skills.find(s => s.id === b.skill_id)?.name || '?';
+        const stateClass = `s-${b.state}`;
+
+        // Contact box: shown when a solver has committed
+        const contactHtml = b.contact ? `
+          <div class="highlight-bar mt8" style="margin-top:10px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:4px">
+              🔗 Solver Contact
+            </div>
+            <div style="font-size:13px;font-weight:500">${b.contact.full_name || b.contact.username}</div>
+            <div class="small">@${b.contact.username}</div>
+            ${b.contact.email
+              ? `<a href="mailto:${b.contact.email}" style="color:var(--blue);font-size:12px">
+                   ✉ ${b.contact.email}</a>`
+              : ''}
+          </div>` : '';
+
+        const actions = b.state === 'committed'
+          ? `<div class="flex gap8 mt8">
+               <button class="btn btn-gold btn-xs"
+                 onclick="settleMyBounty(${b.id})">✓ Settle & Pay</button>
+               <button class="btn btn-red btn-xs"
+                 onclick="rejectSolver(${b.id})">✕ Reject Solver</button>
+             </div>`
+          : b.state === 'settled'
+            ? `<span class="state s-settled" style="margin-top:8px;display:inline-flex">✓ Settled</span>`
+            : `<span class="state s-open" style="margin-top:8px;display:inline-flex">Open</span>`;
+
+        return `
+          <div class="fcard${b.is_highlighted ? ' hot' : ''}">
+            <div class="flex gap8" style="margin-bottom:8px">
+              <div class="badge b-bounty" style="margin:0">◎ bounty</div>
+              <span class="state ${stateClass}">${b.state}</span>
+            </div>
+            <h3>${b.title}</h3>
+            <p>${b.description}</p>
+            <div class="small mt8" style="color:var(--txt3)">
+              <span class="tag">${skillName}</span>
+              <span class="coin" style="margin-left:6px">⟡ ${b.reward_coins}</span>
+              <span style="margin-left:8px">${ago(b.created_at)}</span>
+            </div>
+            ${contactHtml}
+            ${actions}
+          </div>`;
+      }).join('');
+    }
+  } catch(e) { postedGrid.innerHTML = emptyHtml('✕', e.message); }
+
+  // ── Bounties I'm Solving ─────────────────────
+  const claimedGrid = document.getElementById('actClaimedGrid');
+  claimedGrid.innerHTML = ldgHtml();
+  try {
+    const claimed = await get(`/api/v1/users/${me.id}/bounties/claimed`);
+    if (!claimed.length) {
+      claimedGrid.innerHTML = emptyHtml('🛠', "You haven't claimed any bounties yet.");
+    } else {
+      claimedGrid.innerHTML = claimed.map(b => {
+        const skillName = skills.find(s => s.id === b.skill_id)?.name || '?';
+
+        // Contact box: always shown since they claimed it
+        const contactHtml = b.contact ? `
+          <div class="highlight-bar mt8" style="margin-top:10px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:4px">
+              🔗 Poster Contact
+            </div>
+            <div style="font-size:13px;font-weight:500">${b.contact.full_name || b.contact.username}</div>
+            <div class="small">@${b.contact.username}</div>
+            ${b.contact.email
+              ? `<a href="mailto:${b.contact.email}" style="color:var(--blue);font-size:12px">
+                   ✉ ${b.contact.email}</a>`
+              : ''}
+          </div>` : '';
+
+        const statusLine = b.state === 'settled'
+          ? `<span class="state s-settled" style="margin-top:8px;display:inline-flex">✓ Coins Released</span>`
+          : `<div class="small mt8" style="color:var(--txt2)">
+               ⏳ Work in progress — poster will settle when satisfied.
+             </div>`;
+
+        return `
+          <div class="fcard">
+            <div class="flex gap8" style="margin-bottom:8px">
+              <div class="badge b-bounty" style="margin:0">◎ bounty</div>
+              <span class="state s-${b.state}">${b.state}</span>
+            </div>
+            <h3>${b.title}</h3>
+            <p>${b.description}</p>
+            <div class="small mt8" style="color:var(--txt3)">
+              <span class="tag">${skillName}</span>
+              <span class="coin" style="margin-left:6px">⟡ ${b.reward_coins}</span>
+              <span style="margin-left:8px">${ago(b.created_at)}</span>
+            </div>
+            ${contactHtml}
+            ${statusLine}
+          </div>`;
+      }).join('');
+    }
+  } catch(e) { claimedGrid.innerHTML = emptyHtml('✕', e.message); }
+}
+
+async function settleMyBounty(id) {
+  try {
+    await put(`/api/v1/bounties/${id}/settle?poster_id=${me.id}`);
+    toast('✓ Settled! Coins released to solver.', 'ok');
+    loadMyActivity(); refreshMe();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function rejectSolver(id) {
+  try {
+    await put(`/api/v1/bounties/${id}/reject-solver?poster_id=${me.id}`);
+    toast('Solver rejected. Bounty is open again.', 'info');
+    loadMyActivity(); loadBounties();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+/* ═══════════════════════════════════════════════
+   WORKSHOPS
+═══════════════════════════════════════════════ */
+async function loadWorkshops() {
+  const grid=document.getElementById('wsGrid');
+  grid.innerHTML=ldgHtml();
+  try {
+    const list=await get('/api/v1/workshops');
+    if(!list.length){grid.innerHTML=emptyHtml('◻','No upcoming workshops. Create one!');return;}
+    await loadSkills();
+    grid.innerHTML=list.map(w=>`
+      <div class="fcard">
+        <div class="badge b-workshop">◻ workshop</div>
+        <h3>${w.title}</h3><p>${w.description}</p>
+        <div class="small mt8" style="color:var(--gold)">📅 ${new Date(w.scheduled_at).toLocaleString()}</div>
+        <div class="fcard-ft" style="margin-top:12px">
+          <div class="flex gap8">
+            <span class="tag">${skills.find(s=>s.id===w.skill_id)?.name||'?'}</span>
+            ${w.cost_per_seat>0?`<span class="coin">⟡ ${w.cost_per_seat}/seat</span>`:'<span class="tag">Free</span>'}
+          </div>
+          <div class="flex gap8">
+            <span class="state s-${w.state}">${w.state}</span>
+            ${w.host_id!==me?.id
+              ?`<button class="btn btn-gold btn-xs" onclick="joinWS(${w.id})">Join</button>`
+              :`<span class="small">Your session</span>`}
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e){grid.innerHTML=emptyHtml('✕',e.message);}
+}
+
+async function doWorkshop() {
+  const title=document.getElementById('wf-title').value.trim();
+  const skillName=document.getElementById('wf-skill').value.trim();
+  const description=document.getElementById('wf-desc').value.trim();
+  const max_seats=+document.getElementById('wf-seats').value||10;
+  const cost_per_seat=+document.getElementById('wf-cost').value||0;
+  const scheduled_at=document.getElementById('wf-date').value;
+  if(!title||!scheduled_at){toast('Title and date required','err');return;}
+  try {
+    const skill_id = skillName ? await getOrCreateSkill(skillName) : null;
+    await api(`/api/v1/workshops?host_id=${me.id}`,{method:'POST',body:JSON.stringify({skill_id,title,description,max_seats,cost_per_seat,scheduled_at})});
+    closeM('m-workshop'); toast('Workshop created!','ok'); loadWorkshops();
+  } catch(e){toast(e.message,'err');}
+}
+
+async function joinWS(id,e) {
+  if(e)e.stopPropagation();
+  try {
+    await api(`/api/v1/workshop/${id}/join?user_id=${me.id}`,{method:'POST'});
+    toast('Joined workshop! 🎓','ok'); loadWorkshops(); refreshMe();
+  } catch(e){toast(e.message,'err');}
+}
+
+/* ═══════════════════════════════════════════════
+   PROFILE
+═══════════════════════════════════════════════ */
+async function loadProfile() {
+  me = await get(`/api/v1/users/${me.id}`).catch(()=>me);
+  updateSidebar();
+  document.getElementById('pAvLg').textContent  = initials(me.full_name||me.username);
+  document.getElementById('pName').textContent  = me.full_name||me.username;
+  document.getElementById('pMeta').textContent  = `@${me.username} · ${me.email||''}`;
+  document.getElementById('pCoins').textContent = me.wallet_balance;
+  document.getElementById('pRep').textContent   = (me.reputation_score||0).toFixed(2);
+  document.getElementById('pTrust').textContent = `Lvl ${me.trust_level||1}`;
+  document.getElementById('trustFill').style.width = `${((me.trust_level||1)/5)*100}%`;
+  document.getElementById('offeredList').innerHTML =
+    (me.skills_offered||[]).map(s=>`<span class="t-offer">${s.name}</span>`).join('')||'<span class="small">None yet</span>';
+  document.getElementById('wantedList').innerHTML =
+    (me.skills_wanted||[]).map(s=>`<span class="t-want">${s.name}</span>`).join('')||'<span class="small">None yet</span>';
+  await loadSkills(); populateAllSelects();
+}
+
+async function addSkill(type) {
+  const name=(document.getElementById(type==='offered'?'addOff':'addWnt').value||'').trim();
+  if(!name){toast('Enter a skill name','err');return;}
+  try {
+    const id = await getOrCreateSkill(name);
+    if(!id){toast('Could not resolve skill','err');return;}
+    await api(`/api/v1/users/${me.id}/skills/${type}/${id}`,{method:'POST'});
+    toast('Skill added!','ok'); loadProfile();
+  } catch(e){toast(e.message,'err');}
+}
+
+/* ═══════════════════════════════════════════════
+   COMMUNITY
+═══════════════════════════════════════════════ */
+async function loadCommunity() {
+  const grid=document.getElementById('commGrid');
+  grid.innerHTML=ldgHtml();
+  try {
+    users=await get('/api/v1/users');
+    if(!users.length){grid.innerHTML=emptyHtml('◑','No members yet.');return;}
+    grid.innerHTML=users.map(u=>`
+      <div class="mcard">
+        <div class="mcard-hd">
+          <div class="mav">${initials(u.full_name||u.username)}</div>
+          <div>
+            <div class="mname">${u.full_name||u.username}</div>
+            <div class="mrep">${stars(u.reputation_score)}</div>
+            <div class="small">@${u.username} · Lvl ${u.trust_level}</div>
+          </div>
+        </div>
+        <div class="skill-row"><div class="skill-row-lbl">Offers</div>
+          <div class="tags">${(u.skills_offered||[]).map(s=>`<span class="t-offer">${s.name}</span>`).join('')||'<span class="small">—</span>'}</div></div>
+        <div class="skill-row mt8"><div class="skill-row-lbl">Wants</div>
+          <div class="tags">${(u.skills_wanted||[]).map(s=>`<span class="t-want">${s.name}</span>`).join('')||'<span class="small">—</span>'}</div></div>
+        <div class="flex gap8 mt8">
+          <span class="coin">⟡ ${u.wallet_balance}</span>
+          ${u.id!==me?.id?`<button class="btn btn-ghost btn-xs" style="flex:1" onclick="prefillSwap(${u.id})">↔ Swap</button>`:'<span class="small" style="color:var(--gold)">You</span>'}
+        </div>
+      </div>`).join('');
+  } catch(e){grid.innerHTML=emptyHtml('✕',e.message);}
+}
+
+/* ═══════════════════════════════════════════════
+   REVIEWS
+═══════════════════════════════════════════════ */
+function openRv(swapId,revieweeId) {
+  document.getElementById('rv-swap').value=swapId;
+  document.getElementById('rv-reviewee').value=revieweeId;
+  openM('m-review');
+}
+async function doReview() {
+  const swap_id=+document.getElementById('rv-swap').value;
+  const reviewee_id=+document.getElementById('rv-reviewee').value;
+  const rating=+document.getElementById('rv-rating').value;
+  const comment=document.getElementById('rv-comment').value.trim();
+  try {
+    await api(`/api/v1/reviews?reviewer_id=${me.id}`,{method:'POST',body:JSON.stringify({swap_id,reviewee_id,rating,comment})});
+    closeM('m-review'); toast('Review submitted! Reputation updated.','ok'); loadSwaps();
+  } catch(e){toast(e.message,'err');}
+}
+
+/* ═══════════════════════════════════════════════
+   SEARCH (client-side filter)
+═══════════════════════════════════════════════ */
+function handleSearch() {
+  const q=document.getElementById('gSearch').value.toLowerCase().trim();
+  if(!q) return;
+  document.querySelectorAll('.fcard').forEach(c=>{
+    const text=c.textContent.toLowerCase();
+    c.style.opacity=text.includes(q)?'1':'0.25';
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+function ldgHtml(msg='Loading…') {
+  return `<div class="ldg"><div class="spin"></div> ${msg}</div>`;
+}
+function emptyHtml(ico,msg) {
+  return `<div class="empty"><div class="ico">${ico}</div><p>${msg}</p></div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+═══════════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k') document.getElementById('gSearch')?.focus();
+  if(e.key==='Enter'&&document.getElementById('li-pass')===document.activeElement) doLogin();
+  if(e.key==='Enter'&&document.getElementById('r-pass')===document.activeElement) doRegister();
+});
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+document.getElementById('ts-format')?.addEventListener('change', toggleTeachExtras);
+tryRestoreSession();
+</script>
+</body>
+</html>
